@@ -287,24 +287,32 @@ async function loadEntries() {
         entryElement.className = "log-entry";
 
 
-        // Check if current user created this entry
-        const isOwner =
-            currentUser &&
-            currentUser.id === entry.user_id;
+    // Check if current user created this entry
+    const isOwner =
+        currentUser &&
+        currentUser.id === entry.user_id;
 
+    // Rita is the master user and can delete any entry
+    const isMasterUser =
+        currentUser &&
+        currentUser.id === "eddf8394-747e-4128-8ede-ebc4a376c1c1";
 
-        // Delete button
-        const deleteButton =
-            isOwner
-                ? `
-                    <button
-                        class="delete-entry-button"
-                        data-id="${entry.id}"
-                    >
-                        Delete
-                    </button>
-                  `
-                : "";
+    // Show Delete button if the user owns the entry OR is Rita
+    const canDelete =
+        isOwner || isMasterUser;
+
+    // Delete button
+    const deleteButton =
+        canDelete
+            ? `
+                <button
+                    class="delete-entry-button"
+                    data-id="${entry.id}"
+                >
+                    Delete
+                </button>
+            `
+            : "";
 
 
         entryElement.innerHTML = `
