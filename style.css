@@ -309,17 +309,10 @@ nav {
 .overview-grid {
     display: grid;
 
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 3fr 2fr;
 
     gap: 12px;
 }
-
-.overview-grid .card:last-child {
-    width: max-content;
-    min-width: 300px;
-}
-
-
 
 .card {
     border: 1px solid #2d2d2d;
