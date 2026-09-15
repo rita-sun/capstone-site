@@ -6,6 +6,13 @@ const supabaseClient = supabase.createClient(
     SUPABASE_KEY
 );
 
+const teamNames = {
+    "eddf8394-747e-4128-8ede-ebc4a376c1c1": "Rita"
+    // "": "Andrew"
+    // "": "Akil"
+    // "": "Kevin"
+    // "": "Sunil"
+};
 
 // ELEMENTS
 const entryForm = document.getElementById("entryForm");
@@ -159,7 +166,7 @@ entryForm.addEventListener("submit", async function (event) {
     const content =
         document.getElementById("entryContent").value;
     
-    const name = prompt("What name should be shown on this entry?");
+    const name = teamNames[data.user.id] || "Team member";
 
 
     const { error } =
