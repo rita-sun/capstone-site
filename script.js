@@ -161,3 +161,236 @@ entryForm.addEventListener("submit", async function (event) {
 
 
     const { error } =
+        await supabaseClient
+            .from("design_entries")
+            .insert([
+                {
+                    title: title,
+                    category: category,
+                    content: content,
+                    user_id: data.user.id
+                }
+            ]);
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "There was a problem saving your entry: "
+            + error.message
+        );
+
+        return;
+    }
+
+
+    alert("Entry saved!");
+
+
+    entryForm.reset();
+
+    entryFormContainer.style.display = "none";
+
+    newEntryButton.style.display = "inline-block";
+
+
+    await loadEntries();
+});
+
+
+// LOAD ENTRIES
+async function loadEntries() {
+
+    if (!entriesContainer) return;
+
+
+    // Get current user
+    const { data: userData } =
+        await supabaseClient.auth.getUser();
+
+    const currentUser =
+        userData.user;
+
+
+    // Get all entries
+    const { data: entries, error } =
+        await supabaseClient
+            .from("design_entries")
+            .select("*")
+            .order("created_at", {
+                ascending: false
+            });
+
+
+    if (error) {
+
+        console.error(error);
+
+        entriesContainer.innerHTML =
+            "<p>Unable to load entries.</p>";
+
+        return;
+    }
+
+
+    entriesContainer.innerHTML = "";
+
+
+    if (!entries || entries.length === 0) {
+
+        entriesContainer.innerHTML =
+            "<p class='muted'>No design entries yet. Add your first one!</p>";
+
+        return;
+    }
+
+
+    // Display entries
+    entries.forEach(function (entry) {
+
+        const date =
+            new Date(entry.created_at);
+
+
+        // Date + time
+        const formattedDate =
+            date.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+
+
+        const formattedTime =
+            date.toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit"
+            });
+
+
+        const entryElement =
+            document.createElement("article");
+
+
+        entryElement.className = "log-entry";
+
+
+        // Check if current user created this entry
+        const isOwner =
+            currentUser &&
+            currentUser.id === entry.user_id;
+
+
+        // Delete button
+        const deleteButton =
+            isOwner
+                ? `
+                    <button
+                        class="delete-entry-button"
+                        data-id="${entry.id}"
+                    >
+                        Delete
+                    </button>
+                  `
+                : "";
+
+
+        entryElement.innerHTML = `
+
+            <div class="log-entry-meta">
+
+                <span>
+                    ${entry.category}
+                </span>
+
+                <span>
+                    ${formattedDate} · ${formattedTime}
+                </span>
+
+            </div>
+
+
+            <h3>
+                ${entry.title}
+            </h3>
+
+
+            <p class="log-author">
+                Added by ${currentUser && currentUser.id === entry.user_id
+                    ? currentUser.email
+                    : "Team member"}
+            </p>
+
+
+            <p>
+                ${entry.content}
+            </p>
+
+
+            ${deleteButton}
+
+        `;
+
+
+        entriesContainer.appendChild(entryElement);
+
+    });
+
+
+    // Add delete functionality
+    document
+        .querySelectorAll(".delete-entry-button")
+        .forEach(function (button) {
+
+            button.addEventListener(
+                "click",
+                deleteEntry
+            );
+
+        });
+}
+
+
+// DELETE ENTRY
+async function deleteEntry(event) {
+
+    const entryId =
+        event.target.dataset.id;
+
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this entry?"
+        );
+
+
+    if (!confirmed) return;
+
+
+    const { error } =
+        await supabaseClient
+            .from("design_entries")
+            .delete()
+            .eq("id", entryId);
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "There was a problem deleting the entry: "
+            + error.message
+        );
+
+        return;
+    }
+
+
+    alert("Entry deleted.");
+
+
+    await loadEntries();
+}
