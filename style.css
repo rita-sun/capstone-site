@@ -1106,3 +1106,40 @@ footer {
     border-color: #c87878;
     color: #963737;
 }
+
+.weekly-schedule {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px 20px 20px;
+    border-top: 1px solid #2d2d2d;
+}
+
+.weekly-event {
+    background: #26372d;
+    border-left: 3px solid #6d9b78;
+    border-radius: 5px;
+    padding: 10px 12px;
+    color: #b5b5b5;
+    font-size: 12px;
+}
+
+.weekly-event strong {
+    display: block;
+    color: #d5d5d5;
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+
+.weekly-event span {
+    display: block;
+    color: #888;
+    font-size: 11px;
+}
+
+.weekly-event small {
+    display: block;
+    color: #666;
+    font-size: 10px;
+    margin-top: 5px;
+}

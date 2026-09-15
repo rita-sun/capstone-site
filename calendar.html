@@ -19,13 +19,11 @@
 
         <div class="site-title">
             <div class="site-icon">C</div>
-
             <div>
                 <strong>Capstone</strong>
                 <span>Design Log</span>
             </div>
         </div>
-
 
         <nav>
 
@@ -43,13 +41,9 @@
 
         </nav>
 
-
         <div class="sidebar-bottom">
-
             <span class="status-dot"></span>
-
             <span>Capstone 2026</span>
-
         </div>
 
     </aside>
@@ -91,7 +85,6 @@
 
         </section>
 
-
         <!-- CALENDAR -->
 
         <section class="calendar-container">
@@ -100,7 +93,7 @@
 
                 <div>
 
-                    <h2>
+                    <h2 id="calendarMonth">
                         September 2026
                     </h2>
 
@@ -113,18 +106,24 @@
 
                 <div class="calendar-controls">
 
-                    <button>←</button>
+                    <button id="previousMonth" type="button">
+                        ←
+                    </button>
 
-                    <button>Today</button>
+                    <button id="todayButton" type="button">
+                        Today
+                    </button>
 
-                    <button>→</button>
+                    <button id="nextMonth" type="button">
+                        →
+                    </button>
 
                 </div>
 
             </div>
 
 
-            <div class="calendar">
+            <div class="calendar" id="calendar">
 
                 <div class="weekday">MON</div>
                 <div class="weekday">TUE</div>
@@ -134,205 +133,10 @@
                 <div class="weekday">SAT</div>
                 <div class="weekday">SUN</div>
 
-
-                <!-- AUGUST -->
-
-                <div class="day muted-day">
-                    <span>31</span>
-                </div>
-
-
-                <!-- SEPTEMBER -->
-
-                <div class="day">
-                    <span>1</span>
-                </div>
-
-                <div class="day">
-                    <span>2</span>
-                </div>
-
-                <div class="day">
-                    <span>3</span>
-                </div>
-
-                <div class="day">
-                    <span>4</span>
-                </div>
-
-                <div class="day">
-                    <span>5</span>
-                </div>
-
-                <div class="day">
-                    <span>6</span>
-                </div>
-
-
-                <div class="day">
-
-                    <span>7</span>
-
-                    <div class="event blue">
-                        Team meeting
-                    </div>
-
-                </div>
-
-
-                <div class="day">
-                    <span>8</span>
-                </div>
-
-
-                <div class="day">
-
-                    <span>9</span>
-
-                    <div class="event purple">
-                        Research
-                    </div>
-
-                </div>
-
-
-                <div class="day">
-                    <span>10</span>
-                </div>
-
-                <div class="day">
-                    <span>11</span>
-                </div>
-
-                <div class="day">
-                    <span>12</span>
-                </div>
-
-                <div class="day">
-                    <span>13</span>
-                </div>
-
-
-                <div class="day">
-                    <span>14</span>
-                </div>
-
-
-                <div class="day today">
-
-                    <span>15</span>
-
-                    <div class="event blue">
-                        Design log
-                    </div>
-
-                </div>
-
-
-                <div class="day">
-
-                    <span>16</span>
-
-                    <div class="event green">
-                        Concept review
-                    </div>
-
-                </div>
-
-
-                <div class="day">
-                    <span>17</span>
-                </div>
-
-
-                <div class="day">
-
-                    <span>18</span>
-
-                    <div class="event purple">
-                        Prototype
-                    </div>
-
-                </div>
-
-
-                <div class="day">
-                    <span>19</span>
-                </div>
-
-                <div class="day">
-                    <span>20</span>
-                </div>
-
-
-                <div class="day">
-                    <span>21</span>
-                </div>
-
-                <div class="day">
-                    <span>22</span>
-                </div>
-
-                <div class="day">
-                    <span>23</span>
-                </div>
-
-                <div class="day">
-                    <span>24</span>
-                </div>
-
-                <div class="day">
-                    <span>25</span>
-                </div>
-
-                <div class="day">
-                    <span>26</span>
-                </div>
-
-                <div class="day">
-                    <span>27</span>
-                </div>
-
-
-                <div class="day">
-                    <span>28</span>
-                </div>
-
-                <div class="day">
-                    <span>29</span>
-                </div>
-
-
-                <div class="day">
-
-                    <span>30</span>
-
-                    <div class="event green">
-                        Milestone
-                    </div>
-
-                </div>
-
-
-                <!-- OCTOBER -->
-
-                <div class="day muted-day">
-                    <span>1</span>
-                </div>
-
-                <div class="day muted-day">
-                    <span>2</span>
-                </div>
-
-                <div class="day muted-day">
-                    <span>3</span>
-                </div>
-
-                <div class="day muted-day">
-                    <span>4</span>
-                </div>
-
             </div>
+
+
+            <div class="weekly-schedule" id="weeklySchedule"></div>
 
         </section>
 
@@ -436,12 +240,544 @@
         <footer>
 
             <p>
-                Capstone Design Log · 2026
+                Group 45 Capstone Design Log · 2026
             </p>
 
         </footer>
 
     </main>
+
+
+    <script>
+
+        // =========================
+        // CALENDAR RANGE
+        // =========================
+
+        const startDate = new Date(2026, 8, 1);  // September 2026
+        const endDate = new Date(2027, 3, 1);    // April 2027
+
+        let currentDate = new Date(2026, 8, 1);
+
+
+        const calendar = document.getElementById("calendar");
+        const calendarMonth = document.getElementById("calendarMonth");
+        const previousMonth = document.getElementById("previousMonth");
+        const nextMonth = document.getElementById("nextMonth");
+        const todayButton = document.getElementById("todayButton");
+        const weeklySchedule = document.getElementById("weeklySchedule");
+
+
+        // =========================
+        // INDIVIDUAL EVENTS
+        // =========================
+
+        const events = {
+
+            "2026-09-24": [
+                {
+                    title: "Prof Meeting",
+                    details: "10:00 AM – 10:15 AM • E5 3048",
+                    type: "blue"
+                }
+            ],
+
+            "2026-09-25": [
+                {
+                    title: "Website Link Due",
+                    type: "purple"
+                }
+            ],
+
+            "2026-10-01": [
+                {
+                    title: "Prof Meeting",
+                    details: "10:00 AM – 10:15 AM • E5 3006",
+                    type: "blue"
+                }
+            ],
+
+            "2026-10-19": [
+                {
+                    title: "Upload PDP Presentation on LEARN",
+                    details: "9:00 AM",
+                    type: "purple"
+                }
+            ],
+
+            "2026-10-22": [
+                {
+                    title: "Preliminary Design Presentation (PDP)",
+                    details: "10:00 AM – 10:15 AM • PSE 1427",
+                    type: "blue"
+                }
+            ],
+
+            "2026-11-05": [
+                {
+                    title: "Prof Meeting",
+                    details: "10:00 AM – 10:15 AM • E5 3048",
+                    type: "blue"
+                }
+            ],
+
+            "2026-11-19": [
+                {
+                    title: "Prof Meeting",
+                    details: "10:00 AM – 10:15 AM • E5 3048",
+                    type: "blue"
+                }
+            ],
+
+            "2026-11-30": [
+                {
+                    title: "Upload FDP Presentation on LEARN",
+                    details: "9:00 AM",
+                    type: "purple"
+                }
+            ],
+
+            "2026-12-03": [
+                {
+                    title: "Final Design Presentation (FDP)",
+                    details: "10:00 AM – 10:15 AM • PSE 1427",
+                    type: "blue"
+                }
+            ],
+
+            "2026-12-08": [
+                {
+                    title: "Final Design Report Due",
+                    type: "purple"
+                }
+            ]
+
+        };
+
+
+        // =========================
+        // WEEKLY PROJECT PHASES
+        // =========================
+
+        const weeklyEvents = [
+
+            {
+                start: "2026-09-14",
+                end: "2026-09-18",
+                title: "Team Formation & Project Proposal Discussion Among Team Members"
+            },
+
+            {
+                start: "2026-09-21",
+                end: "2026-09-25",
+                title: "Project Proposal: State a Design Problem",
+                details: "What is the Need, what are the Objectives, Constraints, and Criteria?"
+            },
+
+            {
+                start: "2026-09-28",
+                end: "2026-10-02",
+                title: "Check / Iterate Design Problem Formulation",
+                details: "Need, Objectives, Constraints, Criteria"
+            },
+
+            {
+                start: "2026-10-05",
+                end: "2026-10-09",
+                title: "Outline at least 4 solutions & at least 3 patents",
+                details: "Apply the criteria using a decision matrix and identify the best solution"
+            },
+
+            {
+                start: "2026-10-12",
+                end: "2026-10-16",
+                title: "Reading Week"
+            },
+
+            {
+                start: "2026-11-02",
+                end: "2026-11-06",
+                title: "Detailed Design"
+            },
+
+            {
+                start: "2026-11-16",
+                end: "2026-11-20",
+                title: "Design Verification, Revision Checks"
+            },
+
+            {
+                start: "2026-11-23",
+                end: "2026-11-27",
+                title: "Finalize the Design",
+                details: "Do revisions if / where needed"
+            }
+
+        ];
+
+
+        // =========================
+        // DATE HELPERS
+        // =========================
+
+        function formatDate(year, month, day) {
+
+            const monthString = String(month + 1).padStart(2, "0");
+            const dayString = String(day).padStart(2, "0");
+
+            return `${year}-${monthString}-${dayString}`;
+
+        }
+
+
+        // =========================
+        // RENDER CALENDAR
+        // =========================
+
+        function renderCalendar() {
+
+            calendar.innerHTML = `
+                <div class="weekday">MON</div>
+                <div class="weekday">TUE</div>
+                <div class="weekday">WED</div>
+                <div class="weekday">THU</div>
+                <div class="weekday">FRI</div>
+                <div class="weekday">SAT</div>
+                <div class="weekday">SUN</div>
+            `;
+
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+
+            const monthName = currentDate.toLocaleString("default", {
+                month: "long"
+            });
+
+
+            calendarMonth.textContent =
+                `${monthName} ${year}`;
+
+
+            // First day of month
+            const firstDay =
+                new Date(year, month, 1).getDay();
+
+
+            const startingDay =
+                firstDay === 0
+                    ? 6
+                    : firstDay - 1;
+
+
+            // Number of days
+            const daysInMonth =
+                new Date(year, month + 1, 0).getDate();
+
+
+            // Previous month days
+            const previousMonthDays =
+                new Date(year, month, 0).getDate();
+
+
+            for (
+                let i = startingDay - 1;
+                i >= 0;
+                i--
+            ) {
+
+                const day =
+                    document.createElement("div");
+
+                day.className =
+                    "day muted-day";
+
+                day.innerHTML =
+                    `<span>${previousMonthDays - i}</span>`;
+
+                calendar.appendChild(day);
+
+            }
+
+
+            // Current month
+            for (
+                let dayNumber = 1;
+                dayNumber <= daysInMonth;
+                dayNumber++
+            ) {
+
+                const day =
+                    document.createElement("div");
+
+                day.className = "day";
+
+
+                const today = new Date();
+
+
+                const isToday =
+                    year === today.getFullYear() &&
+                    month === today.getMonth() &&
+                    dayNumber === today.getDate();
+
+
+                if (isToday) {
+                    day.classList.add("today");
+                }
+
+
+                day.innerHTML =
+                    `<span>${dayNumber}</span>`;
+
+
+                // Individual events
+                const dateKey =
+                    formatDate(
+                        year,
+                        month,
+                        dayNumber
+                    );
+
+
+                const dayEvents =
+                    events[dateKey] || [];
+
+
+                dayEvents.forEach(event => {
+
+                    const eventElement =
+                        document.createElement("div");
+
+                    eventElement.className =
+                        `event ${event.type}`;
+
+
+                    eventElement.innerHTML = `
+                        <strong>${event.title}</strong>
+                        ${
+                            event.details
+                                ? `<br><span>${event.details}</span>`
+                                : ""
+                        }
+                    `;
+
+
+                    day.appendChild(eventElement);
+
+                });
+
+
+                calendar.appendChild(day);
+
+            }
+
+
+            // Next month days
+            const totalCells =
+                startingDay + daysInMonth;
+
+
+            const remainingCells =
+                totalCells % 7 === 0
+                    ? 0
+                    : 7 - (totalCells % 7);
+
+
+            for (
+                let dayNumber = 1;
+                dayNumber <= remainingCells;
+                dayNumber++
+            ) {
+
+                const day =
+                    document.createElement("div");
+
+                day.className =
+                    "day muted-day";
+
+                day.innerHTML =
+                    `<span>${dayNumber}</span>`;
+
+                calendar.appendChild(day);
+
+            }
+
+
+            // =========================
+            // WEEKLY SCHEDULE
+            // =========================
+
+            weeklySchedule.innerHTML = "";
+
+
+            const visibleWeeklyEvents =
+                weeklyEvents.filter(event => {
+
+                    const start =
+                        new Date(event.start);
+
+                    const end =
+                        new Date(event.end);
+
+                    const monthStart =
+                        new Date(year, month, 1);
+
+                    const monthEnd =
+                        new Date(year, month + 1, 0);
+
+
+                    return start <= monthEnd &&
+                        end >= monthStart;
+
+                });
+
+
+            visibleWeeklyEvents.forEach(event => {
+
+                const weeklyItem =
+                    document.createElement("div");
+
+                weeklyItem.className =
+                    "weekly-event";
+
+
+                weeklyItem.innerHTML = `
+                    <strong>${event.title}</strong>
+                    ${
+                        event.details
+                            ? `<span>${event.details}</span>`
+                            : ""
+                    }
+                    <small>
+                        ${formatWeeklyDates(event.start, event.end)}
+                    </small>
+                `;
+
+
+                weeklySchedule.appendChild(weeklyItem);
+
+            });
+
+
+            // Disable navigation at limits
+            previousMonth.disabled =
+                currentDate.getTime() <= startDate.getTime();
+
+            nextMonth.disabled =
+                currentDate.getTime() >= endDate.getTime();
+
+        }
+
+
+        // =========================
+        // WEEK DATE FORMAT
+        // =========================
+
+        function formatWeeklyDates(start, end) {
+
+            const startDate =
+                new Date(start + "T00:00:00");
+
+            const endDate =
+                new Date(end + "T00:00:00");
+
+
+            const startMonth =
+                startDate.toLocaleString("default", {
+                    month: "short"
+                });
+
+
+            const endMonth =
+                endDate.toLocaleString("default", {
+                    month: "short"
+                });
+
+
+            return `${startMonth} ${startDate.getDate()} – ${endMonth} ${endDate.getDate()}`;
+
+        }
+
+
+        // =========================
+        // NAVIGATION
+        // =========================
+
+        previousMonth.addEventListener(
+            "click",
+            function () {
+
+                if (currentDate > startDate) {
+
+                    currentDate =
+                        new Date(
+                            currentDate.getFullYear(),
+                            currentDate.getMonth() - 1,
+                            1
+                        );
+
+                    renderCalendar();
+
+                }
+
+            }
+        );
+
+
+        nextMonth.addEventListener(
+            "click",
+            function () {
+
+                if (currentDate < endDate) {
+
+                    currentDate =
+                        new Date(
+                            currentDate.getFullYear(),
+                            currentDate.getMonth() + 1,
+                            1
+                        );
+
+                    renderCalendar();
+
+                }
+
+            }
+        );
+
+
+        todayButton.addEventListener(
+            "click",
+            function () {
+
+                const today = new Date();
+
+
+                if (
+                    today >= startDate &&
+                    today <= endDate
+                ) {
+
+                    currentDate =
+                        new Date(
+                            today.getFullYear(),
+                            today.getMonth(),
+                            1
+                        );
+
+                    renderCalendar();
+
+                }
+
+            }
+        );
+
+
+        // Initial render
+        renderCalendar();
+
+    </script>
 
 </body>
 </html>
