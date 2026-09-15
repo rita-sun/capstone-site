@@ -1107,3 +1107,7 @@ footer {
     border-color: #c87878;
     color: #963737;
 }
+
+.overview-grid .card:last-child {
+    min-width: 300px;
+}
