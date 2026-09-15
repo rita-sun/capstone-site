@@ -898,3 +898,192 @@ footer {
     }
 
 }
+
+/* =============================
+   DESIGN LOG
+============================= */
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#userEmail {
+    color: #a0a0a0;
+    font-size: 13px;
+}
+
+.primary-button,
+.secondary-button,
+.small-button {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.primary-button {
+    background: #ffffff;
+    color: #191919;
+}
+
+.primary-button:hover {
+    background: #d9d9d9;
+}
+
+.secondary-button,
+.small-button {
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 1px solid #3a3a3a;
+}
+
+.secondary-button:hover,
+.small-button:hover {
+    background: #333333;
+}
+
+
+/* ENTRY FORM */
+
+.entry-form-container {
+    background: #1f1f1f;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #d5d5d5;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: #191919;
+    color: #ffffff;
+    border: 1px solid #353535;
+    border-radius: 6px;
+    padding: 11px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #666666;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 140px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+}
+
+
+/* LOG ENTRIES */
+
+.entries-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.log-entry {
+    background: #1f1f1f;
+    border: 1px solid #2d2d2d;
+    border-radius: 8px;
+    padding: 20px;
+    transition: 0.2s ease;
+}
+
+.log-entry:hover {
+    border-color: #414141;
+}
+
+.log-entry-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.log-entry-meta span:first-child {
+    color: #8fa8c7;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.log-entry-meta span:last-child {
+    color: #777777;
+    font-size: 12px;
+}
+
+.log-entry h3 {
+    margin: 0 0 6px;
+    color: #ffffff;
+    font-size: 18px;
+}
+
+.log-author {
+    color: #888888;
+    font-size: 12px;
+    margin: 0 0 12px;
+}
+
+.log-entry > p:last-child {
+    color: #b5b5b5;
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+
+    .user-area {
+        gap: 6px;
+    }
+
+    #userEmail {
+        display: none;
+    }
+
+    .section-heading {
+        gap: 15px;
+    }
+
+    .primary-button {
+        white-space: nowrap;
+    }
+
+    .entry-form-container {
+        padding: 18px;
+    }
+
+}
