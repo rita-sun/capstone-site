@@ -328,7 +328,7 @@ async function loadEntries() {
 
 
             <p class="log-author">
-                Added by ${entry.user_id}
+                Added by ${userEmail.textContent}
             </p>
 
 
