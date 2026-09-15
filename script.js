@@ -8,7 +8,7 @@ const supabaseClient = supabase.createClient(
 
 const teamNames = {
     "eddf8394-747e-4128-8ede-ebc4a376c1c1": "Rita",
-    // "": "Andrew"
+    "9646e5e4-b46e-4e75-b57c-e92eefade6ad": "Andrew",
     "0144ca1b-0768-48f8-adff-62f7bf5ce0a2": "Akil",
     "eaac6c8f-ff7a-4964-81d6-ed8ac2f45a3a": "Kevin",
     "06143692-44f1-4348-824e-642636f21861": "Sunil"
