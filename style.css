@@ -1087,3 +1087,23 @@ footer {
     }
 
 }
+
+.delete-entry-button {
+    margin-top: 16px;
+    background: transparent;
+    color: #b04a4a;
+    border: 1px solid #d9a6a6;
+    border-radius: 7px;
+    padding: 6px 11px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-entry-button:hover {
+    background: #fff5f5;
+    border-color: #c87878;
+    color: #963737;
+}
