@@ -21,6 +21,7 @@ const entryForm = document.getElementById("entryForm");
 const entriesContainer = document.getElementById("entriesContainer");
 
 const newEntryButton = document.getElementById("newEntryButton");
+newEntryButton.style.display = "none";
 const cancelEntryButton = document.getElementById("cancelEntryButton");
 
 const entryFormContainer =
@@ -65,14 +66,17 @@ async function checkUser() {
         loginButton.style.display = "inline-block";
         logoutButton.style.display = "none";
 
-        return;
+        newEntryButton.style.display = "none";
 
+        return;
     }
 
     userEmail.textContent = data.user.email;
 
     loginButton.style.display = "none";
     logoutButton.style.display = "inline-block";
+
+    newEntryButton.style.display = "inline-block";
 
 }
 
