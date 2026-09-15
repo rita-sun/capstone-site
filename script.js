@@ -158,6 +158,8 @@ entryForm.addEventListener("submit", async function (event) {
 
     const content =
         document.getElementById("entryContent").value;
+    
+    const name = prompt("What name should be shown on this entry?");
 
 
     const { error } =
@@ -168,7 +170,8 @@ entryForm.addEventListener("submit", async function (event) {
                     title: title,
                     category: category,
                     content: content,
-                    user_id: data.user.id
+                    user_id: data.user.id,
+                    name: name
                 }
             ]);
 
@@ -318,9 +321,7 @@ async function loadEntries() {
 
 
             <p class="log-author">
-                Added by ${currentUser && currentUser.id === entry.user_id
-                    ? currentUser.email
-                    : "Team member"}
+                Added by ${entry.name || "Team member"}
             </p>
 
 
