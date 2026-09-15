@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,16 +17,13 @@
 
         <div class="site-title">
             <div class="site-icon">C</div>
-
             <div>
                 <strong>Capstone</strong>
                 <span>Design Log</span>
             </div>
         </div>
 
-
         <nav>
-
             <a href="index.html" class="nav-link active">
                 <span>⌂</span>
                 Design Log
@@ -39,10 +35,273 @@
                 <span>▦</span>
                 Schedule
             </a>
-
         </nav>
 
-
         <div class="sidebar-bottom">
-            <span class="status-dot"><
-```
+            <span class="status-dot"></span>
+            <span>Capstone 2026</span>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <header class="topbar">
+
+            <span class="breadcrumb">
+                Capstone / Design Log
+            </span>
+
+            <div class="user-area">
+
+                <span id="userEmail"></span>
+
+                <button id="loginButton" class="small-button">
+                    Log in
+                </button>
+
+                <button
+                    id="logoutButton"
+                    class="small-button"
+                    style="display: none;"
+                >
+                    Log out
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- HERO -->
+        <section class="hero">
+
+            <p class="eyebrow">
+                ENGINEERING CAPSTONE
+            </p>
+
+            <h1>
+                My Design Log
+            </h1>
+
+            <p class="hero-description">
+                A record of the decisions, progress, experiments,
+                iterations, and reflections throughout my capstone project.
+            </p>
+
+        </section>
+
+
+        <!-- PROJECT OVERVIEW -->
+        <section class="section">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-label">01</p>
+                    <h2>Project Overview</h2>
+                </div>
+
+            </div>
+
+            <div class="overview-grid">
+
+                <div class="card large-card">
+
+                    <span class="card-label">PROJECT</span>
+
+                    <h3>Project Name</h3>
+
+                    <p>
+                        Add a short description of your capstone project here.
+                        Explain what you are designing, who it is for, and
+                        what problem you are trying to solve.
+                    </p>
+
+                </div>
+
+
+                <div class="card">
+
+                    <span class="card-label">STATUS</span>
+
+                    <div class="status">
+                        <span class="status-dot"></span>
+                        In Progress
+                    </div>
+
+                    <p class="muted">
+                        Currently working on the capstone project.
+                    </p>
+
+                </div>
+
+
+                <div class="card">
+
+                    <span class="card-label">TEAM</span>
+
+                    <h3>Team Members</h3>
+
+                    <p class="muted">
+                        Your name<br>
+                        Team member<br>
+                        Team member
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- DESIGN LOG -->
+        <section class="section" id="design-log">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-label">02</p>
+                    <h2>Design Log</h2>
+
+                    <p class="section-description">
+                        Entries are displayed from most recent to oldest.
+                    </p>
+                </div>
+
+                <button id="newEntryButton" class="primary-button">
+                    + New Entry
+                </button>
+
+            </div>
+
+
+            <!-- ENTRY FORM -->
+            <div
+                id="entryFormContainer"
+                class="entry-form-container"
+                style="display: none;"
+            >
+
+                <form id="entryForm">
+
+                    <div class="form-group">
+
+                        <label for="entryTitle">
+                            Entry Title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="entryTitle"
+                            placeholder="e.g. Initial Problem Definition"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="entryCategory">
+                            Category
+                        </label>
+
+                        <select id="entryCategory" required>
+
+                            <option value="">
+                                Select a category
+                            </option>
+
+                            <option value="Research">
+                                Research
+                            </option>
+
+                            <option value="Ideation">
+                                Ideation
+                            </option>
+
+                            <option value="Prototyping">
+                                Prototyping
+                            </option>
+
+                            <option value="Testing">
+                                Testing
+                            </option>
+
+                            <option value="Reflection">
+                                Reflection
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="entryContent">
+                            What happened?
+                        </label>
+
+                        <textarea
+                            id="entryContent"
+                            rows="6"
+                            placeholder="Describe what you worked on, what you learned, decisions you made, problems you encountered, or changes you made..."
+                            required
+                        ></textarea>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button type="submit" class="primary-button">
+                            Save Entry
+                        </button>
+
+                        <button
+                            type="button"
+                            id="cancelEntryButton"
+                            class="secondary-button"
+                        >
+                            Cancel
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- SUPABASE ENTRIES -->
+            <div id="entriesContainer" class="entries-container">
+
+                <p class="muted">
+                    Loading entries...
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <footer>
+
+            <p>
+                Capstone Design Log · 2026
+            </p>
+
+        </footer>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
