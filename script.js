@@ -284,35 +284,56 @@ async function loadEntries() {
             document.createElement("article");
 
 
-        entryElement.className = "log-entry";
+        entryElement.className =
+            "log-entry";
 
 
-    // Check if current user created this entry
-    const isOwner =
-        currentUser &&
-        currentUser.id === entry.user_id;
+        // Check if current user created this entry
+        const isOwner =
+            currentUser &&
+            currentUser.id === entry.user_id;
 
-    // Rita is the master user and can delete any entry
-    const isMasterUser =
-        currentUser &&
-        currentUser.id === "eddf8394-747e-4128-8ede-ebc4a376c1c1";
 
-    // Show Delete button if the user owns the entry OR is Rita
-    const canDelete =
-        isOwner || isMasterUser;
+        // Rita is the master user
+        const isMasterUser =
+            currentUser &&
+            currentUser.id === "eddf8394-747e-4128-8ede-ebc4a376c1c1";
 
-    // Delete button
-    const deleteButton =
-        canDelete
-            ? `
-                <button
-                    class="delete-entry-button"
-                    data-id="${entry.id}"
-                >
-                    Delete
-                </button>
-            `
-            : "";
+
+        // User can edit/delete if they own the entry OR are Rita
+        const canEdit =
+            isOwner || isMasterUser;
+
+        const canDelete =
+            isOwner || isMasterUser;
+
+
+        // Edit button
+        const editButton =
+            canEdit
+                ? `
+                    <button
+                        class="edit-entry-button"
+                        data-id="${entry.id}"
+                    >
+                        Edit
+                    </button>
+                  `
+                : "";
+
+
+        // Delete button
+        const deleteButton =
+            canDelete
+                ? `
+                    <button
+                        class="delete-entry-button"
+                        data-id="${entry.id}"
+                    >
+                        Delete
+                    </button>
+                  `
+                : "";
 
 
         entryElement.innerHTML = `
@@ -340,12 +361,18 @@ async function loadEntries() {
             </p>
 
 
-            <p>
+            <p class="log-content">
                 ${entry.content}
             </p>
 
 
-            ${deleteButton}
+            <div class="entry-actions">
+
+                ${editButton}
+
+                ${deleteButton}
+
+            </div>
 
         `;
 
@@ -353,6 +380,19 @@ async function loadEntries() {
         entriesContainer.appendChild(entryElement);
 
     });
+
+
+    // Add edit functionality
+    document
+        .querySelectorAll(".edit-entry-button")
+        .forEach(function (button) {
+
+            button.addEventListener(
+                "click",
+                editEntry
+            );
+
+        });
 
 
     // Add delete functionality
@@ -366,8 +406,207 @@ async function loadEntries() {
             );
 
         });
+
 }
 
+// EDIT ENTRY
+async function editEntry(event) {
+
+    const entryId =
+        event.target.dataset.id;
+
+
+    // Get the entry
+    const { data: entry, error } =
+        await supabaseClient
+            .from("design_entries")
+            .select("*")
+            .eq("id", entryId)
+            .single();
+
+
+    if (error || !entry) {
+
+        console.error(error);
+
+        alert("Unable to load this entry.");
+
+        return;
+    }
+
+
+    const entryElement =
+        event.target.closest(".log-entry");
+
+
+    // Replace the entry with editing fields
+    entryElement.innerHTML = `
+
+        <div class="edit-entry-form">
+
+            <label>
+                Category
+            </label>
+
+            <select class="edit-category">
+
+                <option value="Research"
+                    ${entry.category === "Research" ? "selected" : ""}>
+                    Research
+                </option>
+
+                <option value="Design"
+                    ${entry.category === "Design" ? "selected" : ""}>
+                    Design
+                </option>
+
+                <option value="Prototype"
+                    ${entry.category === "Prototype" ? "selected" : ""}>
+                    Prototype
+                </option>
+
+                <option value="Testing"
+                    ${entry.category === "Testing" ? "selected" : ""}>
+                    Testing
+                </option>
+
+                <option value="Other"
+                    ${entry.category === "Other" ? "selected" : ""}>
+                    Other
+                </option>
+
+            </select>
+
+
+            <label>
+                Title
+            </label>
+
+            <input
+                type="text"
+                class="edit-title"
+                value="${entry.title.replace(/"/g, "&quot;")}"
+            >
+
+
+            <label>
+                Content
+            </label>
+
+            <textarea
+                class="edit-content"
+                rows="6"
+            >${entry.content}</textarea>
+
+
+            <div class="edit-actions">
+
+                <button
+                    type="button"
+                    class="save-edit-button"
+                >
+                    Save Changes
+                </button>
+
+                <button
+                    type="button"
+                    class="cancel-edit-button"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    // Save button
+    entryElement
+        .querySelector(".save-edit-button")
+        .addEventListener(
+            "click",
+            function () {
+                saveEditedEntry(entryId, entryElement);
+            }
+        );
+
+
+    // Cancel button
+    entryElement
+        .querySelector(".cancel-edit-button")
+        .addEventListener(
+            "click",
+            function () {
+                loadEntries();
+            }
+        );
+
+}
+
+
+// SAVE EDITED ENTRY
+async function saveEditedEntry(entryId, entryElement) {
+
+    const category =
+        entryElement
+            .querySelector(".edit-category")
+            .value;
+
+
+    const title =
+        entryElement
+            .querySelector(".edit-title")
+            .value
+            .trim();
+
+
+    const content =
+        entryElement
+            .querySelector(".edit-content")
+            .value
+            .trim();
+
+
+    if (!title || !content) {
+
+        alert("Please enter a title and content.");
+
+        return;
+    }
+
+
+    const { error } =
+        await supabaseClient
+            .from("design_entries")
+            .update({
+                title: title,
+                category: category,
+                content: content
+            })
+            .eq("id", entryId);
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "There was a problem updating the entry: "
+            + error.message
+        );
+
+        return;
+    }
+
+
+    alert("Entry updated!");
+
+
+    await loadEntries();
+
+}
 
 // DELETE ENTRY
 async function deleteEntry(event) {

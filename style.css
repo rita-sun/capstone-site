@@ -1143,3 +1143,94 @@ footer {
     font-size: 10px;
     margin-top: 5px;
 }
+
+.entry-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.edit-entry-button,
+.delete-entry-button {
+    margin-top: 0;
+}
+
+.edit-entry-button {
+    background: transparent;
+    color: #668db3;
+    border: 1px solid #9bbbd9;
+    border-radius: 7px;
+    padding: 6px 11px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-entry-button:hover {
+    background: #f3f7fb;
+    border-color: #668db3;
+    color: #466d92;
+}
+
+.edit-entry-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.edit-entry-form label {
+    color: #888;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.edit-entry-form input,
+.edit-entry-form select,
+.edit-entry-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #202020;
+    color: #ddd;
+    padding: 9px 10px;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.edit-entry-form textarea {
+    resize: vertical;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.save-edit-button,
+.cancel-edit-button {
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.save-edit-button {
+    background: #2d4050;
+    color: #d5e4f0;
+    border: 1px solid #668db3;
+}
+
+.cancel-edit-button {
+    background: transparent;
+    color: #888;
+    border: 1px solid #444;
+}
+
+.log-content {
+    white-space: pre-wrap;
+}
