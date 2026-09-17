@@ -455,14 +455,14 @@ async function editEntry(event) {
                     Research
                 </option>
 
-                <option value="Design"
-                    ${entry.category === "Design" ? "selected" : ""}>
-                    Design
+                <option value="Ideation"
+                    ${entry.category === "Ideation" ? "selected" : ""}>
+                    Ideation
                 </option>
 
-                <option value="Prototype"
-                    ${entry.category === "Prototype" ? "selected" : ""}>
-                    Prototype
+                <option value="Prototyping"
+                    ${entry.category === "Prototyping" ? "selected" : ""}>
+                    Prototyping
                 </option>
 
                 <option value="Testing"
@@ -470,9 +470,9 @@ async function editEntry(event) {
                     Testing
                 </option>
 
-                <option value="Other"
-                    ${entry.category === "Other" ? "selected" : ""}>
-                    Other
+                <option value="Reflection"
+                    ${entry.category === "Reflection" ? "selected" : ""}>
+                    Reflection
                 </option>
 
             </select>
