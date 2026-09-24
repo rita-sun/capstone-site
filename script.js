@@ -160,23 +160,27 @@ entryForm.addEventListener("submit", async function (event) {
         document.getElementById("entryTitle").value;
 
     const category =
-        document.getElementById("entryCategory").value;
+    document.getElementById("entryCategory").value;
 
-    const content =
-        document.getElementById("entryContent").value;
+    const workType =
+        document.getElementById("entryWorkType").value;
 
     const entryDate =
         document.getElementById("entryDate").value;
 
+    const content =
+        document.getElementById("entryContent").value;
+
     const name = teamNames[data.user.id] || "Team member";
 
     const { error } =
-        await supabaseClient
+        await supabaseClientf
             .from("design_entries")
             .insert([
                 {
                     title: title,
                     category: category,
+                    work_type: workType,
                     content: content,
                     user_id: data.user.id,
                     name: name,
@@ -347,6 +351,10 @@ async function loadEntries() {
                 </span>
 
                 <span>
+                    ${entry.work_type || ""}
+                </span>
+
+                <span>
                     ${formattedDate} · ${formattedTime}
                 </span>
 
@@ -447,10 +455,71 @@ async function editEntry(event) {
         <div class="edit-entry-form">
 
             <label>
-                Category
+                Phase
             </label>
 
             <select class="edit-category">
+
+                <option value="Research"
+                    ${entry.category === "Research" ? "selected" : ""}>
+                    Research
+                </option>
+
+                <option value="Ideation"
+                    ${entry.category === "Ideation" ? "selected" : ""}>
+                    Ideation
+                </option>
+
+                <option value="Prototyping"
+                    ${entry.category === "Prototyping" ? "selected" : ""}>
+                    Prototyping
+                </option>
+
+                <option value="Testing"
+                    ${entry.category === "Testing" ? "selected" : ""}>
+                    Testing
+                </option>
+
+                <option value="Reflection"
+                    ${entry.category === "Reflection" ? "selected" : ""}>
+                    Reflection
+                </option>
+
+            </select>
+
+
+            <label>
+                Work Type
+            </label>
+
+            <select class="edit-work-type">
+
+                <option value="Electrical"
+                    ${entry.work_type === "Electrical" ? "selected" : ""}>
+                    Electrical
+                </option>
+
+                <option value="Mechanical"
+                    ${entry.work_type === "Mechanical" ? "selected" : ""}>
+                    Mechanical
+                </option>
+
+                <option value="Software"
+                    ${entry.work_type === "Software" ? "selected" : ""}>
+                    Software
+                </option>
+
+                <option value="Controls"
+                    ${entry.work_type === "Controls" ? "selected" : ""}>
+                    Controls
+                </option>
+
+                <option value="Admin"
+                    ${entry.work_type === "Admin" ? "selected" : ""}>
+                    Admin
+                </option>
+
+            </select>
 
                 <option value="Research"
                     ${entry.category === "Research" ? "selected" : ""}>
@@ -556,6 +625,10 @@ async function saveEditedEntry(entryId, entryElement) {
             .querySelector(".edit-category")
             .value;
 
+    const workType =
+        entryElement
+            .querySelector(".edit-work-type")
+            .value;
 
     const title =
         entryElement
@@ -585,6 +658,7 @@ async function saveEditedEntry(entryId, entryElement) {
             .update({
                 title: title,
                 category: category,
+                work_type: workType,
                 content: content
             })
             .eq("id", entryId);
