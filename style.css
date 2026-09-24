@@ -987,7 +987,7 @@ footer {
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    border-color: #808080808080;
+    border-color: #808080;
 }
 
 .form-group textarea {
@@ -1037,7 +1037,7 @@ footer {
 }
 
 .log-entry-meta span:last-child {
-    color: #909090909090;
+    color: #909090;
     font-size: 12px;
 }
 
@@ -1048,7 +1048,7 @@ footer {
 }
 
 .log-author {
-    color: #999999999999;
+    color: #999999;
     font-size: 12px;
     margin: 0 0 12px;
 }

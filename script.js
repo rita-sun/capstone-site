@@ -156,7 +156,6 @@ entryForm.addEventListener("submit", async function (event) {
         return;
     }
 
-
     const title =
         document.getElementById("entryTitle").value;
 
@@ -165,9 +164,11 @@ entryForm.addEventListener("submit", async function (event) {
 
     const content =
         document.getElementById("entryContent").value;
-    
-    const name = teamNames[data.user.id] || "Team member";
 
+    const entryDate =
+        document.getElementById("entryDate").value;
+
+    const name = teamNames[data.user.id] || "Team member";
 
     const { error } =
         await supabaseClient
@@ -178,7 +179,8 @@ entryForm.addEventListener("submit", async function (event) {
                     category: category,
                     content: content,
                     user_id: data.user.id,
-                    name: name
+                    name: name,
+                    created_at: new Date(entryDate).toISOString()
                 }
             ]);
 
