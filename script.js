@@ -1,5 +1,5 @@
 const SUPABASE_URL = "https://rzupsnpmxtsuaxxgqptb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_GDNRNLAg5G7AGaxAkVVfxA_-UgNuUO_";
+const SUPABASE_KEY = "sb_publishable_GDNRNLAg5G7AGaxVVfxA_-UgNuUO_";
 
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
@@ -13,6 +13,7 @@ const teamNames = {
     "eaac6c8f-ff7a-4964-81d6-ed8ac2f45a3a": "Kevin",
     "06143692-44f1-4348-824e-642636f21861": "Sunil"
 };
+
 
 // ELEMENTS
 const entryForm = document.getElementById("entryForm");
@@ -36,7 +37,8 @@ document.addEventListener("DOMContentLoaded", function () {
 // CHECK LOGIN
 async function checkUser() {
 
-    const { data, error } = await supabaseClient.auth.getUser();
+    const { data, error } =
+        await supabaseClient.auth.getUser();
 
     if (error || !data.user) {
 
@@ -156,11 +158,12 @@ entryForm.addEventListener("submit", async function (event) {
         return;
     }
 
+
     const title =
         document.getElementById("entryTitle").value;
 
     const category =
-    document.getElementById("entryCategory").value;
+        document.getElementById("entryCategory").value;
 
     const workType =
         document.getElementById("entryWorkType").value;
@@ -171,10 +174,12 @@ entryForm.addEventListener("submit", async function (event) {
     const content =
         document.getElementById("entryContent").value;
 
-    const name = teamNames[data.user.id] || "Team member";
+    const name =
+        teamNames[data.user.id] || "Team member";
+
 
     const { error } =
-        await supabaseClientf
+        await supabaseClient
             .from("design_entries")
             .insert([
                 {
@@ -270,7 +275,7 @@ async function loadEntries() {
             new Date(entry.created_at);
 
 
-        // Date + time
+        // Date
         const formattedDate =
             date.toLocaleDateString("en-US", {
                 year: "numeric",
@@ -279,6 +284,7 @@ async function loadEntries() {
             });
 
 
+        // Time
         const formattedTime =
             date.toLocaleTimeString("en-US", {
                 hour: "numeric",
@@ -419,6 +425,7 @@ async function loadEntries() {
 
 }
 
+
 // EDIT ENTRY
 async function editEntry(event) {
 
@@ -521,33 +528,6 @@ async function editEntry(event) {
 
             </select>
 
-                <option value="Research"
-                    ${entry.category === "Research" ? "selected" : ""}>
-                    Research
-                </option>
-
-                <option value="Ideation"
-                    ${entry.category === "Ideation" ? "selected" : ""}>
-                    Ideation
-                </option>
-
-                <option value="Prototyping"
-                    ${entry.category === "Prototyping" ? "selected" : ""}>
-                    Prototyping
-                </option>
-
-                <option value="Testing"
-                    ${entry.category === "Testing" ? "selected" : ""}>
-                    Testing
-                </option>
-
-                <option value="Reflection"
-                    ${entry.category === "Reflection" ? "selected" : ""}>
-                    Reflection
-                </option>
-
-            </select>
-
 
             <label>
                 Title
@@ -599,7 +579,12 @@ async function editEntry(event) {
         .addEventListener(
             "click",
             function () {
-                saveEditedEntry(entryId, entryElement);
+
+                saveEditedEntry(
+                    entryId,
+                    entryElement
+                );
+
             }
         );
 
@@ -610,7 +595,9 @@ async function editEntry(event) {
         .addEventListener(
             "click",
             function () {
+
                 loadEntries();
+
             }
         );
 
@@ -625,10 +612,12 @@ async function saveEditedEntry(entryId, entryElement) {
             .querySelector(".edit-category")
             .value;
 
+
     const workType =
         entryElement
             .querySelector(".edit-work-type")
             .value;
+
 
     const title =
         entryElement
@@ -683,6 +672,7 @@ async function saveEditedEntry(entryId, entryElement) {
     await loadEntries();
 
 }
+
 
 // DELETE ENTRY
 async function deleteEntry(event) {
