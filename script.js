@@ -501,6 +501,11 @@ async function editEntry(event) {
 
             <select class="edit-work-type">
 
+                <option value=""
+                    ${!entry.work_type ? "selected" : ""}>
+                    No work type
+                </option>
+
                 <option value="Electrical"
                     ${entry.work_type === "Electrical" ? "selected" : ""}>
                     Electrical
