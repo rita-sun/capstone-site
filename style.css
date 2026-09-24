@@ -1028,17 +1028,27 @@ footer {
     margin-bottom: 10px;
 }
 
-.log-entry-meta span:first-child {
-    color: #8fa8c7;
+.log-entry-meta span {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
+.log-entry-meta span:first-child {
+    color: #8fa8c7;
+}
+
+.log-entry-meta span:nth-child(2) {
+    color: #a48db9;
+}
+
 .log-entry-meta span:last-child {
     color: #909090;
     font-size: 12px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
 }
 
 .log-entry h3 {
