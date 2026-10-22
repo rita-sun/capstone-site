@@ -477,6 +477,11 @@ async function editEntry(event) {
                     Ideation
                 </option>
 
+                <option value="Design"
+                    ${entry.category === "Design" ? "selected" : ""}>
+                    Design
+                </option>
+
                 <option value="Prototyping"
                     ${entry.category === "Prototyping" ? "selected" : ""}>
                     Prototyping
