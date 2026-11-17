@@ -1,5 +1,11 @@
+
 const SUPABASE_URL = "https://rzupsnpmxtsuaxxgqptb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_GDNRNLAg5G7AGaxAkVVfxA_-UgNuUO_";
+
+const PHOTO_BUCKET = "design-photos"; // Must match your Supabase Storage bucket
+const MAX_PHOTO_SIZE = 10 * 1024 * 1024; // 10 MB
+
+const MASTER_USER_ID = "eddf8394-747e-4128-8ede-ebc4a376c1c1";
 
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
@@ -15,7 +21,10 @@ const teamNames = {
 };
 
 
+// ========================================
 // ELEMENTS
+// ========================================
+
 const entryForm = document.getElementById("entryForm");
 const entriesContainer = document.getElementById("entriesContainer");
 const newEntryButton = document.getElementById("newEntryButton");
@@ -26,27 +35,253 @@ const loginButton = document.getElementById("loginButton");
 const logoutButton = document.getElementById("logoutButton");
 const userEmail = document.getElementById("userEmail");
 
+const entryPhotosInput = document.getElementById("entryPhotos");
+const newPhotoPreviews = document.getElementById("newPhotoPreviews");
 
+let pendingPhotos = [];
+let previewUrls = [];
+
+
+// ========================================
+// HELPER FUNCTIONS
+// ========================================
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+function getPhotoUrl(path) {
+    const { data } = supabaseClient.storage
+        .from(PHOTO_BUCKET)
+        .getPublicUrl(path);
+
+    return data.publicUrl;
+}
+
+function getEntryPhotos(entry) {
+    return Array.isArray(entry.photos) ? entry.photos : [];
+}
+
+function canManageEntry(entry, user) {
+    return Boolean(
+        user &&
+        (user.id === entry.user_id || user.id === MASTER_USER_ID)
+    );
+}
+
+function formatDate(dateValue) {
+    const date = new Date(dateValue);
+
+    return {
+        date: date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        }),
+        time: date.toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit"
+        })
+    };
+}
+
+function makeSafeFileName(name) {
+    return name
+        .normalize("NFKD")
+        .replace(/[^a-zA-Z0-9._-]/g, "_")
+        .slice(-100);
+}
+
+function revokePreviewUrls() {
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    previewUrls = [];
+}
+
+function resetPhotoSelection() {
+    revokePreviewUrls();
+    pendingPhotos = [];
+
+    if (entryPhotosInput) {
+        entryPhotosInput.value = "";
+    }
+
+    if (newPhotoPreviews) {
+        newPhotoPreviews.innerHTML = "";
+    }
+}
+
+
+// ========================================
+// PHOTO SELECTION AND PREVIEWS
+// ========================================
+
+if (entryPhotosInput) {
+    entryPhotosInput.addEventListener("change", function () {
+        const files = Array.from(entryPhotosInput.files || []);
+
+        files.forEach(file => {
+            if (!file.type.startsWith("image/")) {
+                alert(file.name + " is not an image.");
+                return;
+            }
+
+            if (file.size > MAX_PHOTO_SIZE) {
+                alert(file.name + " is larger than 10 MB.");
+                return;
+            }
+
+            pendingPhotos.push({
+                file: file,
+                caption: ""
+            });
+        });
+
+        renderNewPhotoPreviews();
+
+        // Clear the input so the same file can be selected again.
+        entryPhotosInput.value = "";
+    });
+}
+
+function renderNewPhotoPreviews() {
+    if (!newPhotoPreviews) return;
+
+    revokePreviewUrls();
+    newPhotoPreviews.innerHTML = "";
+
+    pendingPhotos.forEach((photo, index) => {
+        const url = URL.createObjectURL(photo.file);
+        previewUrls.push(url);
+
+        const item = document.createElement("div");
+        item.className = "photo-preview-item";
+
+        const image = document.createElement("img");
+        image.src = url;
+        image.alt = photo.file.name;
+
+        const details = document.createElement("div");
+        details.className = "photo-preview-details";
+
+        const filename = document.createElement("p");
+        filename.className = "photo-filename";
+        filename.textContent = photo.file.name;
+
+        const caption = document.createElement("input");
+        caption.type = "text";
+        caption.className = "photo-caption-input";
+        caption.placeholder = "Add a caption (optional)";
+        caption.value = photo.caption;
+
+        caption.addEventListener("input", function () {
+            pendingPhotos[index].caption = caption.value;
+        });
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove-photo-button";
+        remove.textContent = "Remove";
+
+        remove.addEventListener("click", function () {
+            pendingPhotos.splice(index, 1);
+            renderNewPhotoPreviews();
+        });
+
+        details.append(filename, caption, remove);
+        item.append(image, details);
+
+        newPhotoPreviews.appendChild(item);
+    });
+}
+
+
+// ========================================
+// PHOTO STORAGE FUNCTIONS
+// ========================================
+
+async function uploadPhotos(photos, entryId, userId) {
+    const uploadedPhotos = [];
+
+    for (const photo of photos) {
+        const file = photo.file;
+
+        const path =
+            `${userId}/${entryId}/${crypto.randomUUID()}-${makeSafeFileName(file.name)}`;
+
+        const { error } = await supabaseClient.storage
+            .from(PHOTO_BUCKET)
+            .upload(path, file, {
+                contentType: file.type,
+                upsert: false
+            });
+
+        if (error) {
+            // Clean up photos uploaded earlier in this batch.
+            const uploadedPaths = uploadedPhotos.map(item => item.path);
+
+            if (uploadedPaths.length > 0) {
+                await supabaseClient.storage
+                    .from(PHOTO_BUCKET)
+                    .remove(uploadedPaths);
+            }
+
+            throw error;
+        }
+
+        uploadedPhotos.push({
+            path: path,
+            caption: (photo.caption || "").trim()
+        });
+    }
+
+    return uploadedPhotos;
+}
+
+async function removeStoredPhotos(photos) {
+    const paths = photos
+        .map(photo => photo.path)
+        .filter(Boolean);
+
+    if (paths.length === 0) return;
+
+    const { error } = await supabaseClient.storage
+        .from(PHOTO_BUCKET)
+        .remove(paths);
+
+    if (error) {
+        console.error("Could not remove stored photos:", error);
+    }
+}
+
+
+// ========================================
 // PAGE LOAD
+// ========================================
+
 document.addEventListener("DOMContentLoaded", function () {
     checkUser();
     loadEntries();
 });
 
 
-// CHECK LOGIN
-async function checkUser() {
+// ========================================
+// AUTHENTICATION
+// ========================================
 
-    const { data, error } =
-        await supabaseClient.auth.getUser();
+async function checkUser() {
+    const { data, error } = await supabaseClient.auth.getUser();
 
     if (error || !data.user) {
-
         userEmail.textContent = "Not logged in";
 
         loginButton.style.display = "inline-block";
         logoutButton.style.display = "none";
-
         newEntryButton.style.display = "none";
 
         return;
@@ -56,37 +291,25 @@ async function checkUser() {
 
     loginButton.style.display = "none";
     logoutButton.style.display = "inline-block";
-
     newEntryButton.style.display = "inline-block";
 }
 
-
-// LOGIN
 loginButton.addEventListener("click", async function () {
-
     const email = prompt("Enter your email:");
-
     if (!email) return;
 
     const password = prompt("Enter your password:");
-
     if (!password) return;
 
-
-    const { error } =
-        await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-
+    const { error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
 
     if (error) {
-
         alert("Login failed: " + error.message);
-
         return;
     }
-
 
     await checkUser();
     await loadEntries();
@@ -94,13 +317,12 @@ loginButton.addEventListener("click", async function () {
     alert("You are now logged in!");
 });
 
-
-// LOGOUT
 logoutButton.addEventListener("click", async function () {
-
     await supabaseClient.auth.signOut();
 
     entryFormContainer.style.display = "none";
+    entryForm.reset();
+    resetPhotoSelection();
 
     await checkUser();
     await loadEntries();
@@ -109,619 +331,661 @@ logoutButton.addEventListener("click", async function () {
 });
 
 
+// ========================================
 // NEW ENTRY BUTTON
+// ========================================
+
 newEntryButton.addEventListener("click", async function () {
-
-    const { data } =
-        await supabaseClient.auth.getUser();
-
+    const { data } = await supabaseClient.auth.getUser();
 
     if (!data.user) {
-
         alert("Please log in before creating a design entry.");
-
         return;
     }
 
+    entryForm.reset();
+    resetPhotoSelection();
 
     entryFormContainer.style.display = "block";
-
     newEntryButton.style.display = "none";
 });
 
 
-// CANCEL ENTRY
-cancelEntryButton.addEventListener("click", function () {
+// ========================================
+// CANCEL NEW ENTRY
+// ========================================
 
+cancelEntryButton.addEventListener("click", function () {
     entryForm.reset();
+    resetPhotoSelection();
 
     entryFormContainer.style.display = "none";
-
     newEntryButton.style.display = "inline-block";
 });
 
 
-// SAVE ENTRY
-entryForm.addEventListener("submit", async function (event) {
+// ========================================
+// SAVE NEW ENTRY
+// ========================================
 
+entryForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
+    const submitButton = entryForm.querySelector('button[type="submit"]');
 
-    const { data } =
-        await supabaseClient.auth.getUser();
+    submitButton.disabled = true;
+    submitButton.textContent = "Saving...";
 
+    let newEntryId = null;
 
-    if (!data.user) {
+    try {
+        const { data } = await supabaseClient.auth.getUser();
 
-        alert("Please log in first.");
+        if (!data.user) {
+            alert("Please log in first.");
+            return;
+        }
 
-        return;
-    }
+        const title = document.getElementById("entryTitle").value.trim();
+        const category = document.getElementById("entryCategory").value;
+        const workType = document.getElementById("entryWorkType").value;
+        const entryDate = document.getElementById("entryDate").value;
+        const content = document.getElementById("entryContent").value.trim();
 
+        const name = teamNames[data.user.id] || "Team member";
 
-    const title =
-        document.getElementById("entryTitle").value;
-
-    const category =
-        document.getElementById("entryCategory").value;
-
-    const workType =
-        document.getElementById("entryWorkType").value;
-
-    const entryDate =
-        document.getElementById("entryDate").value;
-
-    const content =
-        document.getElementById("entryContent").value;
-
-    const name =
-        teamNames[data.user.id] || "Team member";
-
-
-    const { error } =
-        await supabaseClient
+        // Create the entry first to obtain its database ID.
+        const { data: newEntry, error } = await supabaseClient
             .from("design_entries")
-            .insert([
-                {
-                    title: title,
-                    category: category,
-                    work_type: workType,
-                    content: content,
-                    user_id: data.user.id,
-                    name: name,
-                    created_at: new Date(entryDate).toISOString()
-                }
-            ]);
+            .insert({
+                title: title,
+                category: category,
+                work_type: workType,
+                content: content,
+                user_id: data.user.id,
+                name: name,
+                created_at: new Date(entryDate).toISOString(),
+                photos: []
+            })
+            .select()
+            .single();
 
+        if (error) throw error;
 
-    if (error) {
+        newEntryId = newEntry.id;
 
+        // Upload photos, if any were selected.
+        if (pendingPhotos.length > 0) {
+            const uploadedPhotos = await uploadPhotos(
+                pendingPhotos,
+                newEntry.id,
+                data.user.id
+            );
+
+            const { error: updateError } = await supabaseClient
+                .from("design_entries")
+                .update({
+                    photos: uploadedPhotos
+                })
+                .eq("id", newEntry.id);
+
+            if (updateError) {
+                await removeStoredPhotos(uploadedPhotos);
+                throw updateError;
+            }
+        }
+
+        alert("Entry saved!");
+
+        entryForm.reset();
+        resetPhotoSelection();
+
+        entryFormContainer.style.display = "none";
+        newEntryButton.style.display = "inline-block";
+
+        await loadEntries();
+
+    } catch (error) {
         console.error(error);
 
-        alert(
-            "There was a problem saving your entry: "
-            + error.message
-        );
+        // Remove the incomplete entry if saving its photos failed.
+        if (newEntryId) {
+            await supabaseClient
+                .from("design_entries")
+                .delete()
+                .eq("id", newEntryId);
+        }
 
-        return;
+        alert("There was a problem saving your entry: " + error.message);
+
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Save Entry";
     }
-
-
-    alert("Entry saved!");
-
-
-    entryForm.reset();
-
-    entryFormContainer.style.display = "none";
-
-    newEntryButton.style.display = "inline-block";
-
-
-    await loadEntries();
 });
 
 
-// LOAD ENTRIES
-async function loadEntries() {
+// ========================================
+// PHOTO GALLERY DISPLAY
+// ========================================
 
-    if (!entriesContainer) return;
+function renderPhotoGallery(photos) {
+    if (!photos || photos.length === 0) return "";
 
-
-    // Get current user
-    const { data: userData } =
-        await supabaseClient.auth.getUser();
-
-    const currentUser =
-        userData.user;
-
-
-    // Get all entries
-    const { data: entries, error } =
-        await supabaseClient
-            .from("design_entries")
-            .select("*")
-            .order("created_at", {
-                ascending: false
-            });
-
-
-    if (error) {
-
-        console.error(error);
-
-        entriesContainer.innerHTML =
-            "<p>Unable to load entries.</p>";
-
-        return;
-    }
-
-
-    entriesContainer.innerHTML = "";
-
-
-    if (!entries || entries.length === 0) {
-
-        entriesContainer.innerHTML =
-            "<p class='muted'>No design entries yet. Add your first one!</p>";
-
-        return;
-    }
-
-
-    // Display entries
-    entries.forEach(function (entry) {
-
-        const date =
-            new Date(entry.created_at);
-
-
-        // Date
-        const formattedDate =
-            date.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            });
-
-
-        // Time
-        const formattedTime =
-            date.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit"
-            });
-
-
-        const entryElement =
-            document.createElement("article");
-
-
-        entryElement.className =
-            "log-entry";
-
-
-        // Check if current user created this entry
-        const isOwner =
-            currentUser &&
-            currentUser.id === entry.user_id;
-
-
-        // Rita is the master user
-        const isMasterUser =
-            currentUser &&
-            currentUser.id === "eddf8394-747e-4128-8ede-ebc4a376c1c1";
-
-
-        // User can edit/delete if they own the entry OR are Rita
-        const canEdit =
-            isOwner || isMasterUser;
-
-        const canDelete =
-            isOwner || isMasterUser;
-
-
-        // Edit button
-        const editButton =
-            canEdit
-                ? `
-                    <button
-                        class="edit-entry-button"
-                        data-id="${entry.id}"
+    return `
+        <div class="entry-photo-gallery">
+            ${photos.map((photo, index) => `
+                <figure class="entry-photo">
+                    <img
+                        src="${escapeHTML(getPhotoUrl(photo.path))}"
+                        alt="${escapeHTML(photo.caption || "Design log photo")}"
+                        class="gallery-photo"
+                        data-photo-index="${index}"
                     >
-                        Edit
-                    </button>
-                  `
-                : "";
-
-
-        // Delete button
-        const deleteButton =
-            canDelete
-                ? `
-                    <button
-                        class="delete-entry-button"
-                        data-id="${entry.id}"
-                    >
-                        Delete
-                    </button>
-                  `
-                : "";
-
-
-        entryElement.innerHTML = `
-
-            <div class="log-entry-meta">
-
-                <span>
-                    ${entry.category}
-                </span>
-
-                <span>
-                    ${entry.work_type || ""}
-                </span>
-
-                <span>
-                    ${formattedDate} · ${formattedTime}
-                </span>
-
-            </div>
-
-
-            <h3>
-                ${entry.title}
-            </h3>
-
-
-            <p class="log-author">
-                Added by ${entry.name || "Team member"}
-            </p>
-
-
-            <p class="log-content">
-                ${entry.content}
-            </p>
-
-
-            <div class="entry-actions">
-
-                ${editButton}
-
-                ${deleteButton}
-
-            </div>
-
-        `;
-
-
-        entriesContainer.appendChild(entryElement);
-
-    });
-
-
-    // Add edit functionality
-    document
-        .querySelectorAll(".edit-entry-button")
-        .forEach(function (button) {
-
-            button.addEventListener(
-                "click",
-                editEntry
-            );
-
-        });
-
-
-    // Add delete functionality
-    document
-        .querySelectorAll(".delete-entry-button")
-        .forEach(function (button) {
-
-            button.addEventListener(
-                "click",
-                deleteEntry
-            );
-
-        });
-
+                    ${photo.caption ? `
+                        <figcaption>${escapeHTML(photo.caption)}</figcaption>
+                    ` : ""}
+                </figure>
+            `).join("")}
+        </div>
+    `;
 }
 
 
-// EDIT ENTRY
-async function editEntry(event) {
+// ========================================
+// LOAD ENTRIES
+// ========================================
 
-    const entryId =
-        event.target.dataset.id;
+async function loadEntries() {
+    if (!entriesContainer) return;
 
+    const { data: userData } = await supabaseClient.auth.getUser();
+    const currentUser = userData.user;
 
-    // Get the entry
-    const { data: entry, error } =
-        await supabaseClient
-            .from("design_entries")
-            .select("*")
-            .eq("id", entryId)
-            .single();
+    const { data: entries, error } = await supabaseClient
+        .from("design_entries")
+        .select("*")
+        .order("created_at", {
+            ascending: false
+        });
 
-
-    if (error || !entry) {
-
+    if (error) {
         console.error(error);
-
-        alert("Unable to load this entry.");
-
+        entriesContainer.innerHTML = "<p>Unable to load entries.</p>";
         return;
     }
 
+    entriesContainer.innerHTML = "";
 
-    const entryElement =
-        event.target.closest(".log-entry");
+    if (!entries || entries.length === 0) {
+        entriesContainer.innerHTML =
+            "<p class='muted'>No design entries yet. Add your first one!</p>";
+        return;
+    }
+
+    entries.forEach(function (entry) {
+        const entryElement = document.createElement("article");
+        entryElement.className = "log-entry";
+
+        const { date, time } = formatDate(entry.created_at);
+        const photos = getEntryPhotos(entry);
+        const canEdit = canManageEntry(entry, currentUser);
+
+        entryElement.innerHTML = `
+            <div class="log-entry-meta">
+                <span>${escapeHTML(entry.category)}</span>
+                <span>${escapeHTML(entry.work_type || "")}</span>
+                <span>${escapeHTML(date)} · ${escapeHTML(time)}</span>
+            </div>
+
+            <h3>${escapeHTML(entry.title)}</h3>
+
+            <p class="log-author">
+                Added by ${escapeHTML(entry.name || "Team member")}
+            </p>
+
+            <p class="log-content">${escapeHTML(entry.content)}</p>
+
+            ${renderPhotoGallery(photos)}
+
+            <div class="entry-actions">
+                ${canEdit ? `
+                    <button class="edit-entry-button">Edit</button>
+                    <button class="delete-entry-button">Delete</button>
+                ` : ""}
+            </div>
+        `;
+
+        if (canEdit) {
+            entryElement
+                .querySelector(".edit-entry-button")
+                .addEventListener("click", function () {
+                    editEntry(entry.id, entryElement);
+                });
+
+            entryElement
+                .querySelector(".delete-entry-button")
+                .addEventListener("click", function () {
+                    deleteEntry(entry.id);
+                });
+        }
+
+        // Click a photo to open the lightbox.
+        entryElement.querySelectorAll(".gallery-photo").forEach(image => {
+            image.addEventListener("click", function () {
+                const index = Number(image.dataset.photoIndex);
+                openLightbox(photos[index]);
+            });
+        });
+
+        entriesContainer.appendChild(entryElement);
+    });
+}
 
 
-    // Replace the entry with editing fields
+// ========================================
+// EDIT ENTRY
+// ========================================
+
+async function editEntry(entryId, entryElement) {
+    const { data: entry, error } = await supabaseClient
+        .from("design_entries")
+        .select("*")
+        .eq("id", entryId)
+        .single();
+
+    if (error || !entry) {
+        console.error(error);
+        alert("Unable to load this entry.");
+        return;
+    }
+
+    // Keep a separate editable copy of existing photos.
+    const existingPhotos = getEntryPhotos(entry).map(photo => ({
+        ...photo,
+        remove: false
+    }));
+
+    // Photos added during this editing session.
+    const addedPhotos = [];
+
     entryElement.innerHTML = `
-
         <div class="edit-entry-form">
 
-            <label>
-                Phase
-            </label>
+            <label>Phase</label>
 
             <select class="edit-category">
-
-                <option value="Research"
-                    ${entry.category === "Research" ? "selected" : ""}>
-                    Research
-                </option>
-
-                <option value="Ideation"
-                    ${entry.category === "Ideation" ? "selected" : ""}>
-                    Ideation
-                </option>
-
-                <option value="Design"
-                    ${entry.category === "Design" ? "selected" : ""}>
-                    Design
-                </option>
-
-                <option value="Prototyping"
-                    ${entry.category === "Prototyping" ? "selected" : ""}>
-                    Prototyping
-                </option>
-
-                <option value="Testing"
-                    ${entry.category === "Testing" ? "selected" : ""}>
-                    Testing
-                </option>
-
-                <option value="Reflection"
-                    ${entry.category === "Reflection" ? "selected" : ""}>
-                    Reflection
-                </option>
-
+                ${["Research", "Ideation", "Design", "Prototyping", "Testing", "Reflection"]
+                    .map(value => `
+                        <option value="${value}" ${entry.category === value ? "selected" : ""}>
+                            ${value}
+                        </option>
+                    `).join("")}
             </select>
 
-
-            <label>
-                Work Type
-            </label>
+            <label>Work Type</label>
 
             <select class="edit-work-type">
-
-                <option value=""
-                    ${!entry.work_type ? "selected" : ""}>
-                    No work type
-                </option>
-
-                <option value="Electrical"
-                    ${entry.work_type === "Electrical" ? "selected" : ""}>
-                    Electrical
-                </option>
-
-                <option value="Mechanical"
-                    ${entry.work_type === "Mechanical" ? "selected" : ""}>
-                    Mechanical
-                </option>
-
-                <option value="Software"
-                    ${entry.work_type === "Software" ? "selected" : ""}>
-                    Software
-                </option>
-
-                <option value="Controls"
-                    ${entry.work_type === "Controls" ? "selected" : ""}>
-                    Controls
-                </option>
-
-                <option value="Admin"
-                    ${entry.work_type === "Admin" ? "selected" : ""}>
-                    Admin
-                </option>
-
+                ${["", "Electrical", "Mechanical", "Software", "Controls", "Admin"]
+                    .map(value => `
+                        <option value="${value}" ${(entry.work_type || "") === value ? "selected" : ""}>
+                            ${value || "No work type"}
+                        </option>
+                    `).join("")}
             </select>
 
-
-            <label>
-                Title
-            </label>
+            <label>Title</label>
 
             <input
                 type="text"
                 class="edit-title"
-                value="${entry.title.replace(/"/g, "&quot;")}"
+                value="${escapeHTML(entry.title)}"
             >
 
+            <label>Content</label>
 
-            <label>
-                Content
-            </label>
+            <textarea class="edit-content" rows="6">${escapeHTML(entry.content)}</textarea>
 
-            <textarea
-                class="edit-content"
-                rows="6"
-            >${entry.content}</textarea>
+            <div class="form-group edit-existing-photos">
+                <label>Existing Photos</label>
+                <div class="edit-photo-list"></div>
+            </div>
 
+            <div class="form-group">
+                <label>Add More Photos</label>
+
+                <input
+                    type="file"
+                    class="edit-photos-input"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    multiple
+                >
+
+                <div class="edit-new-photo-list photo-preview-list"></div>
+            </div>
 
             <div class="edit-actions">
-
-                <button
-                    type="button"
-                    class="save-edit-button"
-                >
+                <button type="button" class="save-edit-button">
                     Save Changes
                 </button>
 
-                <button
-                    type="button"
-                    class="cancel-edit-button"
-                >
+                <button type="button" class="cancel-edit-button">
                     Cancel
                 </button>
-
             </div>
 
         </div>
-
     `;
 
+    const existingList = entryElement.querySelector(".edit-photo-list");
+    const newList = entryElement.querySelector(".edit-new-photo-list");
+    const fileInput = entryElement.querySelector(".edit-photos-input");
 
-    // Save button
+    // Display existing photos and their captions.
+    function renderExistingPhotos() {
+        existingList.innerHTML = "";
+
+        existingPhotos.forEach((photo, index) => {
+            const item = document.createElement("div");
+            item.className = "photo-preview-item";
+
+            if (photo.remove) {
+                item.classList.add("photo-marked-remove");
+            }
+
+            const image = document.createElement("img");
+            image.src = getPhotoUrl(photo.path);
+            image.alt = photo.caption || "Existing photo";
+
+            const details = document.createElement("div");
+            details.className = "photo-preview-details";
+
+            const caption = document.createElement("input");
+            caption.type = "text";
+            caption.className = "photo-caption-input";
+            caption.placeholder = "Add a caption (optional)";
+            caption.value = photo.caption || "";
+            caption.disabled = photo.remove;
+
+            caption.addEventListener("input", function () {
+                existingPhotos[index].caption = caption.value;
+            });
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "remove-photo-button";
+            remove.textContent = photo.remove ? "Undo remove" : "Remove";
+
+            remove.addEventListener("click", function () {
+                existingPhotos[index].remove = !existingPhotos[index].remove;
+                renderExistingPhotos();
+            });
+
+            details.append(caption, remove);
+            item.append(image, details);
+            existingList.appendChild(item);
+        });
+    }
+
+    // Display newly selected photos.
+    function renderAddedPhotos() {
+        newList.innerHTML = "";
+
+        addedPhotos.forEach((photo, index) => {
+            const item = document.createElement("div");
+            item.className = "photo-preview-item";
+
+            const image = document.createElement("img");
+            image.src = photo.previewUrl;
+            image.alt = photo.file.name;
+
+            const details = document.createElement("div");
+            details.className = "photo-preview-details";
+
+            const filename = document.createElement("p");
+            filename.className = "photo-filename";
+            filename.textContent = photo.file.name;
+
+            const caption = document.createElement("input");
+            caption.type = "text";
+            caption.className = "photo-caption-input";
+            caption.placeholder = "Add a caption (optional)";
+            caption.value = photo.caption;
+
+            caption.addEventListener("input", function () {
+                addedPhotos[index].caption = caption.value;
+            });
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "remove-photo-button";
+            remove.textContent = "Remove";
+
+            remove.addEventListener("click", function () {
+                URL.revokeObjectURL(addedPhotos[index].previewUrl);
+                addedPhotos.splice(index, 1);
+                renderAddedPhotos();
+            });
+
+            details.append(filename, caption, remove);
+            item.append(image, details);
+            newList.appendChild(item);
+        });
+    }
+
+    renderExistingPhotos();
+
+    fileInput.addEventListener("change", function () {
+        const files = Array.from(fileInput.files || []);
+
+        files.forEach(file => {
+            if (!file.type.startsWith("image/")) {
+                alert(file.name + " is not an image.");
+                return;
+            }
+
+            if (file.size > MAX_PHOTO_SIZE) {
+                alert(file.name + " is larger than 10 MB.");
+                return;
+            }
+
+            addedPhotos.push({
+                file: file,
+                caption: "",
+                previewUrl: URL.createObjectURL(file)
+            });
+        });
+
+        renderAddedPhotos();
+        fileInput.value = "";
+    });
+
     entryElement
         .querySelector(".save-edit-button")
-        .addEventListener(
-            "click",
-            function () {
+        .addEventListener("click", function () {
+            saveEditedEntry(entryId, entryElement, existingPhotos, addedPhotos);
+        });
 
-                saveEditedEntry(
-                    entryId,
-                    entryElement
-                );
-
-            }
-        );
-
-
-    // Cancel button
     entryElement
         .querySelector(".cancel-edit-button")
-        .addEventListener(
-            "click",
-            function () {
-
-                loadEntries();
-
-            }
-        );
-
+        .addEventListener("click", function () {
+            addedPhotos.forEach(photo => URL.revokeObjectURL(photo.previewUrl));
+            loadEntries();
+        });
 }
 
 
+// ========================================
 // SAVE EDITED ENTRY
-async function saveEditedEntry(entryId, entryElement) {
+// ========================================
 
-    const category =
-        entryElement
-            .querySelector(".edit-category")
-            .value;
+async function saveEditedEntry(entryId, entryElement, existingPhotos, addedPhotos) {
+    const saveButton = entryElement.querySelector(".save-edit-button");
 
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
 
-    const workType =
-        entryElement
-            .querySelector(".edit-work-type")
-            .value;
+    try {
+        const category = entryElement.querySelector(".edit-category").value;
+        const workType = entryElement.querySelector(".edit-work-type").value;
+        const title = entryElement.querySelector(".edit-title").value.trim();
+        const content = entryElement.querySelector(".edit-content").value.trim();
 
+        if (!title || !content) {
+            alert("Please enter a title and content.");
+            return;
+        }
 
-    const title =
-        entryElement
-            .querySelector(".edit-title")
-            .value
-            .trim();
+        const { data: userData } = await supabaseClient.auth.getUser();
 
+        if (!userData.user) {
+            alert("Please log in first.");
+            return;
+        }
 
-    const content =
-        entryElement
-            .querySelector(".edit-content")
-            .value
-            .trim();
+        // Keep photos that have not been marked for removal.
+        const keptPhotos = existingPhotos
+            .filter(photo => !photo.remove)
+            .map(photo => ({
+                path: photo.path,
+                caption: (photo.caption || "").trim()
+            }));
 
+        const removedPhotos = existingPhotos.filter(photo => photo.remove);
 
-    if (!title || !content) {
+        // Upload any new photos.
+        const uploadedPhotos = await uploadPhotos(
+            addedPhotos,
+            entryId,
+            userData.user.id
+        );
 
-        alert("Please enter a title and content.");
+        const updatedPhotos = [...keptPhotos, ...uploadedPhotos];
 
-        return;
-    }
-
-
-    const { error } =
-        await supabaseClient
+        const { error } = await supabaseClient
             .from("design_entries")
             .update({
                 title: title,
                 category: category,
                 work_type: workType,
-                content: content
+                content: content,
+                photos: updatedPhotos
             })
             .eq("id", entryId);
 
+        if (error) {
+            await removeStoredPhotos(uploadedPhotos);
+            throw error;
+        }
 
-    if (error) {
+        // Delete removed files only after the database update succeeds.
+        await removeStoredPhotos(removedPhotos);
 
+        addedPhotos.forEach(photo => URL.revokeObjectURL(photo.previewUrl));
+
+        alert("Entry updated!");
+
+        await loadEntries();
+
+    } catch (error) {
         console.error(error);
+        alert("There was a problem updating the entry: " + error.message);
 
-        alert(
-            "There was a problem updating the entry: "
-            + error.message
-        );
-
-        return;
+    } finally {
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = "Save Changes";
+        }
     }
-
-
-    alert("Entry updated!");
-
-
-    await loadEntries();
-
 }
 
 
+// ========================================
 // DELETE ENTRY
-async function deleteEntry(event) {
+// ========================================
 
-    const entryId =
-        event.target.dataset.id;
-
-
-    const confirmed =
-        confirm(
-            "Are you sure you want to delete this entry?"
-        );
-
+async function deleteEntry(entryId) {
+    const confirmed = confirm(
+        "Are you sure you want to delete this entry?"
+    );
 
     if (!confirmed) return;
 
+    // Retrieve photos before deleting the entry.
+    const { data: entry, error: fetchError } = await supabaseClient
+        .from("design_entries")
+        .select("photos")
+        .eq("id", entryId)
+        .single();
 
-    const { error } =
-        await supabaseClient
-            .from("design_entries")
-            .delete()
-            .eq("id", entryId);
-
-
-    if (error) {
-
-        console.error(error);
-
-        alert(
-            "There was a problem deleting the entry: "
-            + error.message
-        );
-
+    if (fetchError) {
+        alert("Unable to retrieve this entry's photos: " + fetchError.message);
         return;
     }
 
+    // Delete the database entry.
+    const { error } = await supabaseClient
+        .from("design_entries")
+        .delete()
+        .eq("id", entryId);
+
+    if (error) {
+        console.error(error);
+        alert("There was a problem deleting the entry: " + error.message);
+        return;
+    }
+
+    // Delete its associated Storage files.
+    await removeStoredPhotos(
+        Array.isArray(entry.photos) ? entry.photos : []
+    );
 
     alert("Entry deleted.");
 
-
     await loadEntries();
 }
+
+
+// ========================================
+// PHOTO LIGHTBOX
+// ========================================
+
+const photoLightbox = document.getElementById("photoLightbox");
+const lightboxImage = document.getElementById("lightboxImage");
+const lightboxCaption = document.getElementById("lightboxCaption");
+const closeLightbox = document.getElementById("closeLightbox");
+
+function openLightbox(photo) {
+    if (!photoLightbox || !lightboxImage) return;
+
+    lightboxImage.src = getPhotoUrl(photo.path);
+    lightboxCaption.textContent = photo.caption || "";
+
+    photoLightbox.style.display = "flex";
+}
+
+function hideLightbox() {
+    if (!photoLightbox || !lightboxImage) return;
+
+    photoLightbox.style.display = "none";
+    lightboxImage.src = "";
+    lightboxCaption.textContent = "";
+}
+
+if (closeLightbox) {
+    closeLightbox.addEventListener("click", hideLightbox);
+}
+
+if (photoLightbox) {
+    photoLightbox.addEventListener("click", function (event) {
+        if (event.target === photoLightbox) {
+            hideLightbox();
+        }
+    });
+}
+
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+        hideLightbox();
+    }
+});

@@ -305,6 +305,18 @@
 
                     </div>
 
+                    <div class="form-group">
+                        <label for="entryPhotos">Photos (optional)</label>
+                        <input
+                            type="file"
+                            id="entryPhotos"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            multiple
+                        >
+                        <p class="muted">You can select multiple photos. Add a caption to each one.</p>
+                        <div id="newPhotoPreviews" class="photo-preview-list"></div>
+                    </div>
+
 
                     <div class="form-actions">
 
@@ -351,6 +363,12 @@
 
 
     <script src="script.js"></script>
+
+    <div id="photoLightbox" class="photo-lightbox" style="display: none;">
+        <button type="button" id="closeLightbox" class="lightbox-close">&times;</button>
+        <img id="lightboxImage" src="" alt="Expanded photo">
+        <p id="lightboxCaption"></p>
+    </div>
 
 </body>
 </html>
