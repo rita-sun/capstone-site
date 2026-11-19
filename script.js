@@ -615,10 +615,10 @@ async function editEntry(entryId, entryElement) {
             <label>Phase</label>
 
             <select class="edit-category">
-                ${["","Research", "Ideation", "Design", "Prototyping", "Testing", "Reflection"]
+                ${["Admin","Research", "Ideation", "Design", "Prototyping", "Testing", "Reflection"]
                     .map(value => `
                         <option value="${value}" ${entry.category === value ? "selected" : ""}>
-                            ${value || "No category"}
+                            ${value}
                         </option>
                     `).join("")}
             </select>
