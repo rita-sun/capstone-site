@@ -618,7 +618,7 @@ async function editEntry(entryId, entryElement) {
                 ${["","Research", "Ideation", "Design", "Prototyping", "Testing", "Reflection"]
                     .map(value => `
                         <option value="${value}" ${entry.category === value ? "selected" : ""}>
-                            ${value || "No category"}}
+                            ${value || "No category"}
                         </option>
                     `).join("")}
             </select>
