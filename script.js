@@ -615,10 +615,10 @@ async function editEntry(entryId, entryElement) {
             <label>Phase</label>
 
             <select class="edit-category">
-                ${["Research", "Ideation", "Design", "Prototyping", "Testing", "Reflection"]
+                ${["","Research", "Ideation", "Design", "Prototyping", "Testing", "Reflection"]
                     .map(value => `
                         <option value="${value}" ${entry.category === value ? "selected" : ""}>
-                            ${value}
+                            ${value || "No category"}}
                         </option>
                     `).join("")}
             </select>
@@ -626,7 +626,7 @@ async function editEntry(entryId, entryElement) {
             <label>Work Type</label>
 
             <select class="edit-work-type">
-                ${["", "Electrical", "Mechanical", "Software", "Controls", "Admin"]
+                ${["", "Electrical", "Mechanical", "Software", "Controls", "Project Management"]
                     .map(value => `
                         <option value="${value}" ${(entry.work_type || "") === value ? "selected" : ""}>
                             ${value || "No work type"}
